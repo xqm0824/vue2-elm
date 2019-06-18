@@ -1,19 +1,23 @@
 <template>
   <div class="city-content">
     <div class="header">
-      <i class="icon-arrow_lift back" @click="goHome"></i>
-      <span class="header-text">{{nowcity.name}}</span>
-      <span class="change-city">切换城市</span>
+      <router-link tag="i" :to="'/home'" class="icon-arrow_lift back" ></router-link>
+      <span class="header-text">{{cityname}}</span>
+      <router-link :to="'/home'" tag="span" class="change-city">切换城市</router-link>
     </div>
     <div class="city-wrapper" >
       <cube-scroll :options="scrollOptions">
         <div class="city-form">
           <div class="city-input">
-            <input class="city-input-content" placeholder="输入商务楼，学校，地址"></input>
+            <input 
+              type="search"
+              class="city-input-content" placeholder="输入商务楼，学校，地址"
+              v-model="inputval"
+            > </input>
           </div>
-          <div class="button">提交</div>
+          <div type="submit" class="button" @click="searchcity">提交</div>
         </div>
-        <div class="search-history">
+        <div class="search-history" v-if="historytitle">
           <div class="pois-search-history">搜索历史</div>
           <ul class="search-history-list">
             <li class="history-item"> 
@@ -25,14 +29,17 @@
               <p class="history-address">北京市海淀区颐和园路5号</p>
             </li>
           </ul>
-          <div class="clear-all">清空所有</div>
+          <div class="clear-all" @click="clearAll">清空所有</div>
         </div>
-        <ul class="search-list">
-          <li class="search-item"> 
-            <h4 class="search-name">北京大学</h4>
-            <p class="search-address">北京市海淀区颐和园路5号</p>
+        <ul class="search-list" v-if="list.length">
+          <li class="search-item" v-for="(item, index) in list" :key="index"
+          @click="savehistory(item.name, item.address, item.latitude, item.longitude)"
+          > 
+            <h4 class="search-name">{{item.name}}</h4>
+            <p class="search-address">{{item.address}}</p>
           </li>
         </ul>
+        <div class="search_none_place" v-if="placeNone">很抱歉！无搜索结果</div>
       </cube-scroll>
     </div>
   </div>
@@ -40,30 +47,61 @@
 
 
 <script>
-  import { mapState } from 'vuex'
+  import { searchplace, currentcity } from 'api'
+  import { saveToLocal, loadFromLocal } from 'common/js/storage'
 
-  export default {
-    name: 'city',
-    data() {
-      return {
-        inputval: '',
-        list: '',
-        scrollOptions: {
-          bounce: false //取消顶部的弹性效果
-        }
+export default {
+  name: 'city',
+  data() {
+    return {
+      cityid: '', //当前城市id
+      inputval: '', //输入框地址
+      list: '', // 搜索城市列表
+      cityname: '', //当前城市名字
+      historytitle: true,//默认显示搜索历史头部
+      placeNone: false,//搜索无结果，显示提示信息,
+      search: true,//默认隐藏搜索的城市
+      scrollOptions: {
+        bounce: false //取消顶部的弹性效果
       }
-    },
-    methods: {
-      goHome() {
-        this.$router.push('/')
-      }
-    },
-    computed: {
-      ...mapState({
-        nowcity: 'nowcity'
-      })
     }
+  },
+  methods: {
+    //获取搜索记录
+    initData () {
+      
+    },
+    //保存搜索记录
+    savehistory (name, address, latitude,   longitude) {
+      saveToLocal(name, address, latitude, longitude)
+      console.log(name, address, latitude, longitude)
+    },
+    //发送搜索信息inputVal
+    searchcity() {
+      if(this.inputval) {
+        searchplace(this.cityid, this.inputval).then(res => {
+          this.list = res;
+          console.log(this.list)
+          this.historytitle = false;
+          this.placeNone = res.length? false : true
+        })
+      } 
+    },
+    clearAll() {
+
+    }
+  },
+  mounted() {
+    this.cityid = this.$route.params.cityid
+    //获取当前城市名字
+    currentcity(this.cityid).then(res => {
+      this.cityname = res.name
+    })
+    this.initData()
+  },
+  computed: {
   }
+}
 </script>
 
 <style lang="stylus" scoped>
@@ -85,7 +123,7 @@
       font-size: 14px
       text-align: center
       color:  $color-white
-      background: $color-background-sssss 
+      background: $color-background-sssss
       .back
         left: 10px
         font-weight: 400
@@ -125,7 +163,7 @@
           text-align: center
           margin: 0 auto
           .city-input-content
-            width: 100%        
+            width: 100%
             height: 33px
             border: 1px solid #e4e4e4
             font-size: 15px
@@ -190,5 +228,10 @@
             margin: 0 auto 8px
             font-size: 11px
             color: #999
-      
+      .search_none_place
+        text-align: center
+        font-size: 15px
+        line-height: 34px
+        color: #333
+        background-color: $color-white
 </style>

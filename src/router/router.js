@@ -9,9 +9,14 @@ import City from 'components/city/city'
 Vue.use(Router)
 
 export default new Router({
+  //去掉地址中的哈希#，改成历史模式
+  mode: 'history',
   routes: [
     {
       path: '/',
+      redirect: 'Home',
+    },{
+      path: '/home',
       name: 'Home',
       component: Home
     },{
@@ -23,7 +28,7 @@ export default new Router({
       name: 'Login',
       component: Login
     },{
-      path: '/city',
+      path: '/city/:cityid',
       name: 'City',
       component: City
     }

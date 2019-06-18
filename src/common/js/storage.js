@@ -2,12 +2,15 @@ import storage from 'good-storage'
 
 const SELLER_KEY = '__seller__'
 
-export function saveToLocal (id, key, val) {
+export function saveToLocal (name, address, latitude, longitude) {
   const seller = storage.get(SELLER_KEY, {})
-  if (!seller[id]) {
-    seller[id] = {}
+  if (!name) {
+    seller = {}
   }
-  seller[id][key] = val
+  seller.name = name
+  seller.address = address
+  seller.latitude = latitude
+  seller.longitude = longitude
   storage.set(SELLER_KEY, seller)
 }
 

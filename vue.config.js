@@ -1,9 +1,5 @@
 const webpack = require('webpack')
 const path = require('path')
-const appDate = require('./data.json')
-const seller = appDate.seller
-const goods = appDate.goods
-const ratings = appDate.ratings
 
 function resolve(dir) {
   return path.join(__dirname, dir)
@@ -27,25 +23,14 @@ module.exports = {
     }
   },
   devServer: {
-    before(app) {
-      app.get('/api/seller', function (req, res) {
-        res.json({
-          error: 0,
-          date: seller
-        })
-      }),
-      app.get('/api/goods', function (req, res) {
-        res.json({
-          error: 0,
-          date: goods
-        })
-      }),
-      app.get('/api/ratings', function (req, res) {
-        res.json({
-          error: 0,
-          date: ratings
-        })
-      })
+    proxy: { // 配置跨域
+      '/v1': {
+        target: 'http://cangdu.org:8001'
+      
+      },
+      '/v4': {
+        target: 'http://cangdu.org:8001'
+      }
     }
   },
   chainWebpack(config) {

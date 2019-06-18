@@ -8,24 +8,24 @@
       <cube-scroll :options="scrollOptions">
         <div class="select-city" >
           <div class="title">
-            <span class="title-left">当前选择城市:</span>
+            <span class="title-left">当前定位城市:</span>
             <span class="title-right">定位不准时，请在城市列表中选择</span>
           </div>
-          <div class="city" @click="toCity({name: nowcity.name, id: nowcity.id})">
-            <span class="city_name">{{nowcity.name}}</span>
+          <router-link :to="'/city/' + guessCity.id" class="city" >
+            <span class="city_name">{{guessCity.name}}</span >
             <i class="icon-keyboard_arrow_right icon_right"></i>
-          </div>
+          </router-link>
         </div>
         <split></split>
         <div class="hot-city">
           <div class="title" >热门城市</div>
           <div class="hot-list">
-            <div 
+            <router-link 
               class="hot"
               v-for="(hot,index) in hotcity"
               :key="index"
-              @click="toCity({name: hot.name, id: hot.id})"
-            >{{hot.name}}</div>
+              :to="'/city/' + hot.id" 
+            >{{hot.name}}</router-link>
           </div>
         </div>
         <split></split>
@@ -38,12 +38,12 @@
           <div 
             class="item-list"
           >
-            <div 
+            <router-link 
               class="item "
               v-for="(item, index) in city"
               :key="index"
-              @click="toCity({name: item.name, id: item.id})"
-            >{{item.name}}</div>
+              :to="'/city/' + item.id"
+            >{{item.name}}</router-link>
           </div>
         </div>
       </cube-scroll>
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-  import { getAllCitys, getHotCitys, guessCity} from 'api'
+  import { cityGuess, hotcity, groupcity } from 'api'
   import Split from 'components/split/split'
   import { mapState, mapMutations } from 'vuex'
 
@@ -60,18 +60,27 @@
     name: 'home',
     data() {
       return {
-        citylist: {},    //所有城市列表
-        hotcity: {},     //热门城市列表
-        guessCity: {},   //当前城市
+        groupcity: {},    //所有城市列表
+        hotcity: [],     //热门城市列表
+        guessCity: '  ',   //当前城市
         scrollOptions: {
           bounce: false  //取消顶部的弹性效果
         }
       }
     },
     mounted() {
-      this._getAllCitys(),
-      this._getHotCitys(),
-      this._guessCity()
+      //获取所有城市
+      groupcity().then(res => {
+        this.groupcity = res
+      }),
+      //获取热门城市
+      hotcity().then(res => {
+        this.hotcity = res
+      }),
+      // 获取当前城市
+      cityGuess().then(res => {
+        this.guessCity = res
+      })
     },
     computed: {
       ...mapState({
@@ -81,7 +90,7 @@
           let mycitylist = {};
           for(let i=65;i<=90;i++){
             let num= String.fromCharCode(i);
-            mycitylist[num]=this.citylist[num];
+            mycitylist[num]=this.groupcity[num];
           }
           return mycitylist
       }
@@ -90,34 +99,8 @@
       ...mapMutations([
         'changeCity'
       ]),
-      //所有的城市
-      _getAllCitys() {
-        getAllCitys({
-        }).then((res) => {
-          this.citylist = res
-        })
-      },
-      //热门城市
-      _getHotCitys() {
-        getHotCitys({
-        }).then((res) => {
-          this.hotcity = res
-        })
-      },
-      //定位城市
-      _guessCity() {
-        guessCity({
-        }).then((res) => {
-          this.guessCity = res
-          this.changeCity({name: res.name, id: res.id})
-        })
-      },
       toLogin() {
         this.$router.push('login')
-      },
-      toCity(name) {
-        this.$router.push('city'),
-        this.changeCity(name)
       }
     },
     components: {
